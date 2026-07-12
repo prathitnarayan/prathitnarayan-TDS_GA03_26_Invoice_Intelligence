@@ -118,10 +118,47 @@ def extract(req: InvoiceRequest):
                 }
             ]
         )
+        result = json.loads(response.choices[0].message.content)
 
-        return json.loads(
-            response.choices[0].message.content
-        )
+        # ---------- Normalization ----------
+
+        # Vendor
+        if isinstance(result.get("vendor"), str):
+            result["vendor"] = result["vendor"].strip().rstrip(".")
+
+        # Email
+        if isinstance(result.get("contact_email"), str):
+            result["contact_email"] = result["contact_email"].strip().lower()
+
+        # Currency
+        if isinstance(result.get("currency"), str):
+            result["currency"] = result["currency"].strip().upper()
+
+        # Priority
+        if isinstance(result.get("priority"), str):
+            result["priority"] = result["priority"].strip().lower()
+
+        # Integer fields
+        for key in ["total_amount", "due_in_days", "item_count"]:
+            if key in result and result[key] is not None:
+                result[key] = int(result[key])
+
+        # Line items
+        if isinstance(result.get("line_items"), list):
+            for item in result["line_items"]:
+                if "sku" in item and isinstance(item["sku"], str):
+                    item["sku"] = item["sku"].strip()
+
+                if "quantity" in item:
+                    item["quantity"] = int(item["quantity"])
+
+                if "unit_price" in item:
+                    item["unit_price"] = int(item["unit_price"])
+
+            # Recalculate item count to guarantee correctness
+            result["item_count"] = len(result["line_items"])
+
+        return result
 
     except Exception as e:
         raise HTTPException(
