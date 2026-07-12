@@ -83,6 +83,15 @@ item_count:
 Number of line_items.
 
 Return ONLY JSON.
+IMPORTANT:
+
+- Preserve the vendor name exactly, but remove trailing punctuation such as a final period if it is not part of the company name.
+- Trim leading/trailing whitespace from every string.
+- contact_email must always be lowercase.
+- currency must always be uppercase ISO-4217.
+- priority must always be lowercase.
+- item_count must equal the number of objects in line_items.
+- Return ONLY valid JSON.
 """
 
 
